@@ -15,7 +15,6 @@ function App() {
   const myId = useRef(crypto.randomUUID());
 
   useEffect(() => {
-    // ✅ FIXED: ws:// NOT http://
     const ws = new WebSocket("ws://localhost:8080");
 
     ws.onopen = () => {
@@ -55,7 +54,6 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col p-6 bg-slate-200">
-      {/* MESSAGES */}
       <div className="flex-1 overflow-y-auto bg-white rounded p-4 space-y-2">
         {messages.map((msg, i) => (
           <div
@@ -79,7 +77,6 @@ function App() {
         ))}
       </div>
 
-      {/* INPUT */}
       <div className="flex gap-2 mt-4">
         <input
           ref={inputRef}

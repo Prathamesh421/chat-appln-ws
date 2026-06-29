@@ -14,7 +14,6 @@ wss.on("connection", (socket) => {
         senderId: msg.payload.senderId,
       };
 
-      // broadcast to everyone
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(payload));
