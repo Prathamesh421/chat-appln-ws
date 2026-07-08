@@ -24,6 +24,20 @@ type LeaveMessage = {
   type: "leave";
 };
 
+type SystemMessage = {
+  type: "system";
+  payload: {
+    message: string;
+  };
+};
+
+type UsersMessage = {
+  type: "users";
+  payload: {
+    count: number;
+  };
+};
+
 type ClientMessage = JoinMessage | ChatMessage | LeaveMessage;
 
 function handleJoin(socket: WebSocket, msg: JoinMessage) {
@@ -37,6 +51,21 @@ function handleJoin(socket: WebSocket, msg: JoinMessage) {
 
   rooms.get(roomId)!.add(socket);
   socketRoom.set(socket, roomId);
+  broadcastRoom(roomId, {
+    type: "system",
+    payload: {
+      message: "A user joined the room",
+    },
+  },
+    socket,
+  );
+  
+  broadcastRoom(roomId, {
+    type: "users",
+    payload: {
+      count: rooms.get(roomId)!.size,
+    },
+  });
   console.log(`Client joined room ${roomId}`);
 }
 
@@ -70,12 +99,36 @@ function leaveRoom(socket: WebSocket) {
   if (!room) return;
 
   room.delete(socket);
+  broadcastRoom(roomId, {
+    type: "system",
+    payload: {
+      message: "A user left the room",
+    },
+  });
+
+  broadcastRoom(roomId, {
+    type: "users",
+    payload: {
+      count: room.size,
+    },
+  });
 
   if (room.size === 0) {
     rooms.delete(roomId);
   }
 
   socketRoom.delete(socket);
+}
+
+function broadcastRoom(roomId: string, data: SystemMessage | UsersMessage, exclude?: WebSocket) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  room.forEach((client) => {
+    if (client !== exclude &&  client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
 }
 
 wss.on("connection", (socket) => {
