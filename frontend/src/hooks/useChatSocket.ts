@@ -5,12 +5,25 @@ interface ChatPayload {
   senderId: string;
 }
 
-type ServerMessage = {
-  type: "chat";
-  payload: ChatPayload;
-};
+type ServerMessage =
+  | {
+      type: "chat";
+      payload: ChatPayload;
+    }
+  | {
+      type: "system";
+      payload: {
+        message: string;
+      };
+    }
+  | {
+      type: "users";
+      payload: {
+        count: number;
+      };
+    };
 
-export function useChatSocket(onMessage: (msg: ChatPayload) => void) {
+export function useChatSocket(onMessage: (msg: ServerMessage) => void) {
   const wsRef = useRef<WebSocket | null>(null);
   const onMessageRef = useRef(onMessage);
 
@@ -23,10 +36,7 @@ export function useChatSocket(onMessage: (msg: ChatPayload) => void) {
 
     ws.onmessage = (event) => {
       const msg: ServerMessage = JSON.parse(event.data);
-
-      if (msg.type === "chat") {
-        onMessageRef.current(msg.payload);
-      }
+      onMessageRef.current(msg);
     };
 
     wsRef.current = ws;
